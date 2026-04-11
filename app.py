@@ -43,21 +43,14 @@ st.set_page_config(
 def init_processor():
     try:
         processor = InvoiceProcessor()
-        return processor
-    except EnvironmentError as e:
-        st.error(f"**Tesseract OCR Not Found**\n\n{e}")
-        st.info(
-            "Please install Tesseract OCR:\n"
-            "- **Windows**: Download from https://github.com/UB-Mannheim/tesseract/wiki\n"
-            "- **macOS**: `brew install tesseract`\n"
-            "- **Linux**: `sudo apt-get install tesseract-ocr`\n\n"
-            "Then set the path in `.env` file or add to system PATH."
-        )
-        return None
+        return processor, True
+    except EnvironmentError:
+        # Tesseract not available - return processor with limited functionality
+        return None, False
     except ImportError as e:
         st.error(f"**Missing Dependency**: {e}")
         st.info("Run `pip install -r requirements.txt` to install all dependencies.")
-        return None
+        return None, False
 
 
 def render_sidebar():
@@ -368,9 +361,57 @@ def process_single_file(processor, uploaded_file, preprocess=True):
 
 
 def render_single_mode(
-    processor, preprocess, show_raw_text, show_confidence, output_format
+    processor, preprocess, show_raw_text, show_confidence, output_format, 
+    tesseract_available=True
 ):
     st.subheader("📁 Upload Single Invoice")
+    
+    # If Tesseract is not available, show manual text input
+    if not tesseract_available:
+        st.info("💡 **Manual Mode:** Paste OCR text below and extract fields using pattern matching.")
+        
+        manual_text = st.text_area(
+            "Paste OCR Text Here:",
+            height=200,
+            help="Paste the text extracted from an invoice to extract structured fields",
+        )
+        
+        if manual_text.strip() and st.button("🔍 Extract Fields from Text", type="primary", use_container_width=True):
+            try:
+                from extractor import FieldExtractor
+                from utils import DataCleaner
+                
+                extractor = FieldExtractor()
+                cleaner = DataCleaner()
+                
+                fields = extractor.extract_all_fields(manual_text)
+                cleaned_fields = cleaner.clean_all(fields)
+                
+                result = {
+                    "file_path": "manual_input",
+                    "file_name": "Manual Input",
+                    "extraction_time": "< 1 sec",
+                    "confidence": None,
+                    "fields": cleaned_fields,
+                    "raw_text": manual_text,
+                    "success": True,
+                    "error": None,
+                }
+                
+                if "_confidence_details" in fields:
+                    result["confidence_details"] = fields.pop("_confidence_details")
+                
+                st.success("✅ Fields extracted from text!")
+                render_results(result, show_raw_text, show_confidence)
+                
+            except Exception as e:
+                st.error(f"Error: {e}")
+        
+        st.divider()
+        st.caption("💡 For automatic OCR extraction, install Tesseract and run locally or deploy with Docker/Railway.")
+        return
+    
+    # Normal file upload mode when Tesseract is available
     uploaded_file = st.file_uploader(
         "Choose an invoice file",
         type=SUPPORTED_TYPES,
@@ -442,8 +483,14 @@ def render_single_mode(
 
 
 def render_batch_mode(
-    processor, preprocess, show_raw_text, show_confidence, output_format
+    processor, preprocess, show_raw_text, show_confidence, output_format,
+    tesseract_available=True
 ):
+    if not tesseract_available:
+        st.subheader("📁 Batch Processing")
+        st.info("⚠️ Batch processing requires Tesseract OCR. Use manual mode above or deploy with Docker/Railway for full functionality.")
+        return
+    
     st.subheader("📁 Batch Processing")
     st.info("Upload multiple invoice files to process them all at once.")
 
@@ -544,7 +591,22 @@ def main():
         )
         st.stop()
 
-    processor = init_processor()
+    processor, tesseract_available = init_processor()
+    
+    # Show warning if Tesseract is not available
+    if not tesseract_available:
+        st.warning("⚠️ **Tesseract OCR not available.** Automatic extraction is disabled.")
+        st.info(
+            "💡 **You can still:**\n"
+            "• Use **Manual Text Input** to paste OCR text\n"
+            "• View the **Learning Dashboard**\n"
+            "• Test extraction patterns\n\n"
+            "**To enable full OCR:**\n"
+            "• **Local:** Install Tesseract and run locally\n"
+            "• **Docker:** Use the included Dockerfile\n"
+            "• **Railway/Heroku:** Deploy with system package support"
+        )
+
     if processor is None:
         st.stop()
 
@@ -556,12 +618,14 @@ def main():
 
     with tab_single:
         render_single_mode(
-            processor, preprocess, show_raw_text, show_confidence, output_format
+            processor, preprocess, show_raw_text, show_confidence, output_format, 
+            tesseract_available=tesseract_available
         )
 
     with tab_batch:
         render_batch_mode(
-            processor, preprocess, show_raw_text, show_confidence, output_format
+            processor, preprocess, show_raw_text, show_confidence, output_format,
+            tesseract_available=tesseract_available
         )
 
     with tab_learning:
