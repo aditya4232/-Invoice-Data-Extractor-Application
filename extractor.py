@@ -45,6 +45,9 @@ class FieldExtractor:
                 r"(?i)(?:company\s*name|firm\s*name|name\s*of\s*the\s*seller)[\s]*[:\-#.]*\s*([A-Za-z][A-Za-z\s&.,\-]{1,80}?)(?:\n|$)",
                 r"(?:^|\n)\s*([A-Z][A-Za-z\s]+(?:Pvt\.?\s*Ltd\.?|Ltd\.?|LLP|Private\s*Limited|Limited|Inc\.?|Corp\.?))\s*(?:\n|$)",
                 r"(?:^|\n)\s*([A-Z][A-Za-z\s&]+(?:Pvt\.?\s*Ltd\.?|Ltd\.?|LLP|Limited))\s*(?:\n|,|\.|$)",
+                r"(?i)(?:name|company|supplier|vendor)[\s]*[:\-]*\s*([A-Za-z][A-Za-z\s&.,\-]{2,60})",
+                r"(?:^|\n)\s{0,5}([A-Z][A-Za-z0-9\s&.,\-]{3,60})(?:\n|GSTIN|\s+[0-9])",
+                r"(?:^|\n)\s*([A-Za-z][A-Za-z\s&.,\-]{3,50})\s+(?:Pvt|Ltd|Inc|Corp|GSTIN)",
             ],
             "invoice_number": [
                 r"(?i)(?:invoice|inv|bill|tax\s*invoice)[\s]*(?:no|number|#|num|id)[.:;\-\s]*([A-Za-z0-9][\w\-/\.]{2,25})",
@@ -60,7 +63,10 @@ class FieldExtractor:
                 r"(?i)(?:date|dated|dt)[.:;\-\s]*(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})",
                 r"(?i)(?:invoice|bill)\s*(?:date)[.:;\-\s]*(\d{1,2}\s+\w{3,9}\s+\d{2,4})",
                 r"(?i)(?:date)[.:;\-\s]*(\d{4}[\-/]\d{1,2}[\-/]\d{1,2})",
-                r"(\d{1,2}[\-/]\d{1,2}[\-/]\d{4})",
+                r"(?i)(?:dated)[.:;\-\s]*(\d{1,2}[\-/]\d{1,2}[\-/]\d{4})",
+                r"(?:invoice|date|dated)[\s#:]*(\d{1,2}[\-.]\d{1,2}[\-.]\d{2,4})",
+                r"(\d{1,2}[\s/]\w{3,9}[\s]\d{2,4})",
+                r"(\d{4}[-/]\d{1,2}[-/]\d{1,2})",
             ],
             "due_date": [
                 r"(?i)(?:due|payment|pay)[\s]*(?:date|by|on)[.:;\-\s]*(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})",
@@ -68,11 +74,13 @@ class FieldExtractor:
                 r"(?i)(?:payment\s*terms)[\s:]*(?:net\s*\d+|(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4}))",
             ],
             "total_amount": [
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[.:;\-\s]*[₹\s]*INR[\s]*([\d,]+\.?\d*)",
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[.:;\-\s]*[₹\s]*Rs\.?[\s]*([\d,]+\.?\d*)",
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[.:;\-\s]*[₹\s]*([\d,]+\.?\d*)",
-                r"(?i)(?:total)[.:;\-\s]*[₹\s]*([\d,]+\.?\d*)",
+                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due|balance\s*due|net\s*amount)[\s:]*[₹]?\s*(?:INR\s*)?(?:Rs\.?\s*)?([\d,]+\.?\d*)",
+                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[\s:]*[₹]?\s*(?:INR\s*)?(?:Rs\.?\s*)?([\d,]+\.?\d*)",
+                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[\s:]*[₹]?\s*([\d,]+\.?\d*)",
+                r"(?i)(?:total)[\s:]*[₹]?\s*([\d,]+\.?\d*)",
                 r"[₹]\s*([\d,]+\.?\d{2})\s*(?:\n|$)",
+                r"(?:total|amount)[\s:]*([\d,]+\.?\d{2})(?:\s|$|\n)",
+                r"(?:^|\n)\s*(?:Rs\.?|₹|INR)?\s*([\d,]+\.?\d{2})\s*(?:\n|Total|Amount|$)",
             ],
             "cgst_amount": [
                 r"(?i)(?:cgst|central\s*gst|c\.gst)[\s]*(?:@?\s*[\d.]+%?)?[\s]*[:\-#.]*\s*[₹\s]*([\d,]+\.?\d*)",
@@ -84,8 +92,9 @@ class FieldExtractor:
                 r"(?i)(?:igst|integrated\s*gst|i\.gst)[\s]*(?:@?\s*[\d.]+%?)?[\s]*[:\-#.]*\s*[₹\s]*([\d,]+\.?\d*)",
             ],
             "po_number": [
-                r"(?i)(?:po|purchase\s*order|p\.o\.|po\s*no)[\s]*(?:no|number|#|ref)?[.:;\-\s]*([A-Za-z0-9][\w\-/]{2,20})",
-                r"(?i)(?:po|purchase\s*order)[\s]*[:\-#.]+\s*([A-Za-z0-9][\w\-/]{2,20})",
+                r"(?i)(?:po|purchase\s*order|p\.o\.|po\s*no)[\s]*(?:no|number|#|ref)?[.:;\-\s]*([A-Za-z0-9][\w\-/]{4,25})",
+                r"(?i)(?:po|purchase\s*order)[\s]*[:\-#.]+\s*([A-Za-z0-9][\w\-/]{4,25})",
+                r"(?i)(?:po\s*no|po\s*number)[\s]*[:=\-]*\s*([A-Z0-9]{4,20})",
             ],
             "place_of_supply": [
                 r"(?i)(?:place\s*of\s*supply)[\s]*[:\-#.]*\s*([A-Za-z][A-Za-z\s,\-]{2,40}?)(?:\n|$)",
