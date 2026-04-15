@@ -27,6 +27,5 @@ COPY . .
 RUN mkdir -p /app/sample_invoices /app/output /app/models /app/annotations
 
 EXPOSE 8501
-ENV PORT=8501
 
-CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+CMD sh -c "streamlit run app.py --server.port $PORT --server.address 0.0.0.0"
