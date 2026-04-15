@@ -67,6 +67,8 @@ class FieldExtractor:
                 r"(?:invoice|date|dated)[\s#:]*(\d{1,2}[\-.]\d{1,2}[\-.]\d{2,4})",
                 r"(\d{1,2}[\s/]\w{3,9}[\s]\d{2,4})",
                 r"(\d{4}[-/]\d{1,2}[-/]\d{1,2})",
+                r"(\d{1,2}\s+\w{3,9}\s+\d{4})",
+                r"(?i)(?:invoice\s*no[^:]*?)(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})",
             ],
             "due_date": [
                 r"(?i)(?:due|payment|pay)[\s]*(?:date|by|on)[.:;\-\s]*(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4})",
@@ -74,13 +76,12 @@ class FieldExtractor:
                 r"(?i)(?:payment\s*terms)[\s:]*(?:net\s*\d+|(\d{1,2}[\-/]\d{1,2}[\-/]\d{2,4}))",
             ],
             "total_amount": [
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due|balance\s*due|net\s*amount)[\s:]*[₹]?\s*(?:INR\s*)?(?:Rs\.?\s*)?([\d,]+\.?\d*)",
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[\s:]*[₹]?\s*(?:INR\s*)?(?:Rs\.?\s*)?([\d,]+\.?\d*)",
-                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|amount\s*due)[\s:]*[₹]?\s*([\d,]+\.?\d*)",
+                r"(?i)(?:grand\s*total|net\s*total|total\s*amount|invoice\s*total|amount\s*payable|balance\s*due|net\s*amount|total\s*payable)[\s:]*[₹]?\s*(?:INR\s*)?(?:Rs\.?\s*)?([\d,]+\.?\d*)",
                 r"(?i)(?:total)[\s:]*[₹]?\s*([\d,]+\.?\d*)",
-                r"[₹]\s*([\d,]+\.?\d{2})\s*(?:\n|$)",
-                r"(?:total|amount)[\s:]*([\d,]+\.?\d{2})(?:\s|$|\n)",
-                r"(?:^|\n)\s*(?:Rs\.?|₹|INR)?\s*([\d,]+\.?\d{2})\s*(?:\n|Total|Amount|$)",
+                r"[₹]\s*([\d,]+\.?\d{2})",
+                r"(?:total|amount|payable)[\s:#]*([\d,]+\.?\d{2})",
+                r"(?:^|\n)\s*([\d,]+\.?\d{2})\s*(?:\n|$)",
+                r"(?:Rs\.?|INR)\s*([\d,]+\.?\d*)",
             ],
             "cgst_amount": [
                 r"(?i)(?:cgst|central\s*gst|c\.gst)[\s]*(?:@?\s*[\d.]+%?)?[\s]*[:\-#.]*\s*[₹\s]*([\d,]+\.?\d*)",
@@ -464,6 +465,7 @@ class FieldExtractor:
             r"[₹]\s*([\d,]+\.?\d*)",
             r"(?:INR|Rs\.?)\s*([\d,]+\.?\d*)",
             r"([\d,]+\.?\d*)\s*(?:INR|Rs\.?)",
+            r"([\d,]+\.?\d{2})",
         ]
         amounts = []
         seen = set()
@@ -475,7 +477,7 @@ class FieldExtractor:
                     seen.add(value)
                     amounts.append(value)
         amounts.sort(key=lambda x: self._parse_amount_value(x) or 0, reverse=True)
-        return amounts
+        return amounts[:20]
 
     def _normalize_date(self, date_str: str) -> Optional[str]:
         date_str = date_str.strip().rstrip(".,;:")
