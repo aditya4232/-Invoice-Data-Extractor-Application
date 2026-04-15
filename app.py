@@ -120,14 +120,14 @@ def render_results(result, show_raw_text=False, show_confidence=True):
 
     with col1:
         vendor_conf = (
-            confidence_details.get("vendor_name")
+            confidence_details.get("vendor_name", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
         render_field_card("Vendor Name", fields.get("vendor_name"), "🏢", vendor_conf)
 
         inv_conf = (
-            confidence_details.get("invoice_number")
+            confidence_details.get("invoice_number", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
@@ -136,7 +136,7 @@ def render_results(result, show_raw_text=False, show_confidence=True):
         )
 
         date_conf = (
-            confidence_details.get("invoice_date")
+            confidence_details.get("invoice_date", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
@@ -144,21 +144,21 @@ def render_results(result, show_raw_text=False, show_confidence=True):
 
     with col2:
         due_conf = (
-            confidence_details.get("due_date")
+            confidence_details.get("due_date", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
         render_field_card("Due Date", fields.get("due_date"), "⏰", due_conf)
 
         amt_conf = (
-            confidence_details.get("total_amount")
+            confidence_details.get("total_amount", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
         render_field_card("Total Amount", fields.get("total_amount"), "💰", amt_conf)
 
         po_conf = (
-            confidence_details.get("po_number")
+            confidence_details.get("po_number", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
@@ -166,14 +166,14 @@ def render_results(result, show_raw_text=False, show_confidence=True):
 
     with col3:
         gstin_conf = (
-            confidence_details.get("gstin")
+            confidence_details.get("gstin", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
         render_field_card("GSTIN", fields.get("gstin"), "🇮🇳", gstin_conf)
 
         pan_conf = (
-            confidence_details.get("pan")
+            confidence_details.get("pan", {}).get("confidence")
             if isinstance(confidence_details, dict)
             else None
         )
