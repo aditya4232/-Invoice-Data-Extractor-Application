@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: invoice-extractor
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter

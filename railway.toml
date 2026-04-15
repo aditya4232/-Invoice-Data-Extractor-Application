@@ -1,3 +1,6 @@
 [railway]
 schemaVersion = 2
 builder = "dockerfile"
+
+[deploy]
+port = 8501
