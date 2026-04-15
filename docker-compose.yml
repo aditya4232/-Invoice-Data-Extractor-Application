@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  invoice-extractor:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./sample_invoices:/app/sample_invoices
+      - ./output:/app/output
+      - ./models:/app/models
+      - ./annotations:/app/annotations
+    environment:
+      - TESSERACT_CMD=/usr/bin/tesseract
+    restart: unless-stopped

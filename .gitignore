@@ -1,7 +1,3 @@
-# Tesseract OCR
-tesseract-ocr/
- tessdata/
-
 # Environment files
 .env
 .env.local
@@ -64,20 +60,21 @@ sample_invoices/*.jpg
 sample_invoices/*.jpeg
 !sample_invoices/.gitkeep
 
-# OCR tuning
+# OCR/ML
+tessdata/
 tune_pipeline.py
 ground_truth.json
 ocr_results.json
 *.ocr.txt
+models/
+annotations/
 
-# Ruff
+# Cache
 .ruff_cache/
-.ruff/
 .mypy_cache/
 
-# Streamlit
+# Streamlit secrets (never commit)
 .streamlit/secrets.toml
-.streamlit/config.toml
 
 # Temporary files
 *.tmp

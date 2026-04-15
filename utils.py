@@ -7,6 +7,7 @@ Integrates with advanced training system for continuous learning.
 """
 
 import os
+import re
 import json
 import logging
 import csv
@@ -17,7 +18,11 @@ from typing import Dict, List, Optional, Union
 import pandas as pd
 from dotenv import load_dotenv
 
-from ocr import OCRExtractor
+try:
+    from ocr import OCRExtractor
+except ImportError:
+    OCRExtractor = None
+
 from extractor import FieldExtractor
 from advanced_training import ContinuousLearner
 
@@ -76,8 +81,6 @@ class DataCleaner:
     def validate_gstin(self, gstin: str) -> bool:
         if not gstin or gstin == "Not Found":
             return False
-        import re
-
         if not re.match(self.GSTIN_REGEX, gstin):
             return False
         return True
@@ -85,8 +88,6 @@ class DataCleaner:
     def validate_pan(self, pan: str) -> bool:
         if not pan or pan == "Not Found":
             return False
-        import re
-
         return bool(re.match(self.PAN_REGEX, pan))
 
     def _validate_gstin_checksum(self, gstin: str) -> bool:
@@ -170,17 +171,25 @@ class DataCleaner:
 class InvoiceProcessor:
     """Main processing pipeline that orchestrates OCR + extraction + cleaning."""
 
-    def __init__(self, tesseract_cmd: Optional[str] = None, enable_learning: bool = True):
-        self.ocr = OCRExtractor(tesseract_cmd=tesseract_cmd)
+    def __init__(
+        self, tesseract_cmd: Optional[str] = None, enable_learning: bool = True
+    ):
+        if OCRExtractor is not None:
+            try:
+                self.ocr = OCRExtractor(tesseract_cmd=tesseract_cmd)
+            except (ImportError, EnvironmentError):
+                self.ocr = None
+        else:
+            self.ocr = None
         self.extractor = FieldExtractor()
         self.cleaner = DataCleaner()
         self.enable_learning = enable_learning
-        
+
         if enable_learning:
             self.learner = ContinuousLearner()
         else:
             self.learner = None
-            
+
         self._setup_logging()
         self._ensure_dirs()
 
@@ -208,6 +217,11 @@ class InvoiceProcessor:
         if not os.path.isfile(file_path):
             raise FileNotFoundError(f"File not found: {file_path}")
 
+        if self.ocr is None:
+            raise RuntimeError(
+                "OCR engine unavailable. Install Tesseract or use manual text input."
+            )
+
         start_time = datetime.now()
         result = {
             "file_path": file_path,
@@ -234,11 +248,13 @@ class InvoiceProcessor:
 
             fields = self.extractor.extract_all_fields(raw_text)
             cleaned_fields = self.cleaner.clean_all(fields)
-            
-            # Include confidence details if available
+
             if "_confidence_details" in fields:
                 result["confidence_details"] = fields.pop("_confidence_details")
-            
+
+            # Pop remaining _confidence_details from cleaned_fields too
+            cleaned_fields.pop("_confidence_details", None)
+
             result["fields"] = cleaned_fields
 
             result["success"] = True

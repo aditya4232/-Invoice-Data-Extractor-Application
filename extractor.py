@@ -108,14 +108,23 @@ class FieldExtractor:
 
         # Extract each field with confidence tracking
         for field_name in [
-            "gstin", "pan", "vendor_name", "invoice_number", "invoice_date",
-            "due_date", "total_amount", "cgst_amount", "sgst_amount",
-            "igst_amount", "po_number", "place_of_supply"
+            "gstin",
+            "pan",
+            "vendor_name",
+            "invoice_number",
+            "invoice_date",
+            "due_date",
+            "total_amount",
+            "cgst_amount",
+            "sgst_amount",
+            "igst_amount",
+            "po_number",
+            "place_of_supply",
         ]:
             value, pattern_idx, pattern_preview = self._find_match(
                 text, self.patterns[field_name], field_name
             )
-            
+
             if value:
                 if field_name in ["gstin", "pan"]:
                     result[field_name] = value.upper()
@@ -183,17 +192,23 @@ class FieldExtractor:
         self, text: str, patterns: List[str], field_name: str
     ) -> tuple[Optional[str], int, str]:
         """Find match with confidence and pattern tracking.
-        
+
         Returns: (value, pattern_index, pattern_preview)
         """
         for idx, pattern in enumerate(patterns):
             match = re.search(pattern, text, re.MULTILINE | re.DOTALL)
             if match:
-                value = match.group(1).strip()
+                try:
+                    raw = match.group(1)
+                    if raw is None:
+                        continue
+                    value = raw.strip()
+                except (AttributeError, IndexError):
+                    continue
                 value = re.sub(r"\s+", " ", value)
                 value = value.rstrip(".,;:")
                 if value:
-                    pattern_preview = pattern[:80].replace('\n', ' ')
+                    pattern_preview = pattern[:80].replace("\n", " ")
                     logger.debug(
                         f"Found {field_name}: {value} (pattern idx: {idx}, pattern: {pattern_preview}...)"
                     )
@@ -273,14 +288,14 @@ class FieldExtractor:
     def _derive_pan_from_gstin(self, gstin: str) -> str:
         if len(gstin) == 15:
             possible_pan = gstin[2:12]
-            import re as _re
-
-            if _re.match(r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$", possible_pan):
+            if re.match(r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$", possible_pan):
                 return possible_pan
         return "Not Found"
 
     def extract_vendor_name(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["vendor_name"], "vendor_name")
+        result, _, _ = self._find_match(
+            text, self.patterns["vendor_name"], "vendor_name"
+        )
         if result:
             result = re.sub(r"\s+", " ", result).strip()
             result = re.sub(r"\s*[|\-]\s*$", "", result)
@@ -336,7 +351,9 @@ class FieldExtractor:
         return "Not Found"
 
     def extract_invoice_date(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["invoice_date"], "invoice_date")
+        result, _, _ = self._find_match(
+            text, self.patterns["invoice_date"], "invoice_date"
+        )
         if result:
             normalized = self._normalize_date(result)
             if normalized:
@@ -374,7 +391,9 @@ class FieldExtractor:
         return "Not Found"
 
     def extract_total_amount(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["total_amount"], "total_amount")
+        result, _, _ = self._find_match(
+            text, self.patterns["total_amount"], "total_amount"
+        )
         if result:
             return result
         amounts = self.extract_all_amounts(text)
@@ -400,15 +419,21 @@ class FieldExtractor:
         return "Not Found"
 
     def extract_cgst(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["cgst_amount"], "cgst_amount")
+        result, _, _ = self._find_match(
+            text, self.patterns["cgst_amount"], "cgst_amount"
+        )
         return result if result else "Not Found"
 
     def extract_sgst(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["sgst_amount"], "sgst_amount")
+        result, _, _ = self._find_match(
+            text, self.patterns["sgst_amount"], "sgst_amount"
+        )
         return result if result else "Not Found"
 
     def extract_igst(self, text: str) -> str:
-        result, _, _ = self._find_match(text, self.patterns["igst_amount"], "igst_amount")
+        result, _, _ = self._find_match(
+            text, self.patterns["igst_amount"], "igst_amount"
+        )
         return result if result else "Not Found"
 
     def extract_po_number(self, text: str) -> str:

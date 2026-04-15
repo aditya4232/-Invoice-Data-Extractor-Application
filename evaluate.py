@@ -120,9 +120,7 @@ def evaluate_extraction(
 
         # Calculate file-level accuracy
         total_fields = len(file_eval["fields"])
-        correct_fields = sum(
-            1 for f in file_eval["fields"].values() if f["correct"]
-        )
+        correct_fields = sum(1 for f in file_eval["fields"].values() if f["correct"])
         file_eval["accuracy"] = (
             correct_fields / total_fields if total_fields > 0 else 0.0
         )
@@ -148,11 +146,11 @@ def evaluate_extraction(
             }
 
     # Calculate overall metrics
-    all_accuracies = [
-        f["accuracy"] for f in evaluation["per_field"].values()
-    ]
+    all_accuracies = [f["accuracy"] for f in evaluation["per_field"].values()]
     evaluation["overall"] = {
-        "average_accuracy": round(sum(all_accuracies) / len(all_accuracies), 3) if all_accuracies else 0.0,
+        "average_accuracy": round(sum(all_accuracies) / len(all_accuracies), 3)
+        if all_accuracies
+        else 0.0,
         "fields_evaluated": len(evaluation["per_field"]),
         "total_comparisons": sum(field_total.values()),
         "total_correct": sum(field_correct.values()),
@@ -178,7 +176,11 @@ def print_evaluation_report(evaluation: Dict[str, Any], verbose: bool = False):
     print(f"  Fields Evaluated:        {overall['fields_evaluated']}")
     print(f"  Total Comparisons:       {overall['total_comparisons']}")
     print(f"  Correct Predictions:     {overall['total_correct']}")
-    print(f"  Overall Success Rate:    {overall['total_correct'] / overall['total_comparisons']:.1%}" if overall['total_comparisons'] > 0 else "  Overall Success Rate:    N/A")
+    print(
+        f"  Overall Success Rate:    {overall['total_correct'] / overall['total_comparisons']:.1%}"
+        if overall["total_comparisons"] > 0
+        else "  Overall Success Rate:    N/A"
+    )
 
     print("\n📈 PER-FIELD ACCURACY")
     print("-" * 80)
@@ -197,7 +199,9 @@ def print_evaluation_report(evaluation: Dict[str, Any], verbose: bool = False):
 
         print(f"\n  {field.upper():20s} {status} {accuracy:.1%} ({correct}/{total})")
         print(f"  {' ' * 22} [{bar}]")
-        print(f"  {' ' * 22} Avg Similarity: {avg_sim:.3f} | Min: {metrics['min_similarity']:.3f} | Max: {metrics['max_similarity']:.3f}")
+        print(
+            f"  {' ' * 22} Avg Similarity: {avg_sim:.3f} | Min: {metrics['min_similarity']:.3f} | Max: {metrics['max_similarity']:.3f}"
+        )
 
     if verbose:
         print("\n\n📋 DETAILED PER-FILE RESULTS")
@@ -206,7 +210,9 @@ def print_evaluation_report(evaluation: Dict[str, Any], verbose: bool = False):
             print(f"\n📄 {file_name} (Accuracy: {file_eval['accuracy']:.1%})")
             for field, details in file_eval["fields"].items():
                 status = "✅" if details["correct"] else "❌"
-                print(f"  {status} {field:20s}: Expected='{details['expected']}', Extracted='{details['extracted']}' (Similarity: {details['similarity']:.3f})")
+                print(
+                    f"  {status} {field:20s}: Expected='{details['expected']}', Extracted='{details['extracted']}' (Similarity: {details['similarity']:.3f})"
+                )
 
     print("\n" + "=" * 80)
     print("RECOMMENDATIONS")
@@ -215,15 +221,21 @@ def print_evaluation_report(evaluation: Dict[str, Any], verbose: bool = False):
     # Generate recommendations
     for field, metrics in evaluation["per_field"].items():
         if metrics["accuracy"] < 0.7:
-            print(f"⚠️  {field.upper()}: Low accuracy ({metrics['accuracy']:.1%}). Consider:")
+            print(
+                f"⚠️  {field.upper()}: Low accuracy ({metrics['accuracy']:.1%}). Consider:"
+            )
             print(f"    - Adding more training samples")
             print(f"    - Improving regex patterns")
             print(f"    - Checking OCR quality")
 
     if evaluation["overall"]["average_accuracy"] >= 0.9:
-        print("✅ Overall performance is excellent! Keep adding annotations to maintain quality.")
+        print(
+            "✅ Overall performance is excellent! Keep adding annotations to maintain quality."
+        )
     elif evaluation["overall"]["average_accuracy"] >= 0.7:
-        print("⚠️  Overall performance is good. Focus on low-accuracy fields to improve.")
+        print(
+            "⚠️  Overall performance is good. Focus on low-accuracy fields to improve."
+        )
     else:
         print("❌ Overall performance needs improvement. Consider:")
         print("    - Adding more annotated training data")
@@ -259,7 +271,9 @@ def main():
         "--ground-truth", default=GROUND_TRUTH_FILE, help="Ground truth JSON file"
     )
     parser.add_argument(
-        "--export-report", action="store_true", help="Export evaluation report to output/"
+        "--export-report",
+        action="store_true",
+        help="Export evaluation report to output/",
     )
     parser.add_argument(
         "--verbose", action="store_true", help="Show detailed per-file results"
@@ -280,10 +294,16 @@ def main():
         print("   Running evaluation without ground truth comparison...")
 
     # Process invoices
-    processor = InvoiceProcessor(enable_learning=False)
+    try:
+        processor = InvoiceProcessor(enable_learning=False)
+    except (ImportError, EnvironmentError) as e:
+        print(f"  Cannot initialize processor: {e}")
+        print("  Ensure Tesseract OCR is installed for full evaluation.")
+        return
     print(f"\nProcessing invoices from: {args.dir}")
 
     from pathlib import Path
+
     dir_path = Path(args.dir)
     if not dir_path.exists():
         print(f"  ❌ Directory not found: {args.dir}")
@@ -302,7 +322,9 @@ def main():
 
     results = []
     for i, file_path in enumerate(files, 1):
-        print(f"  [{i}/{len(files)}] Processing {file_path.name}... ", end="", flush=True)
+        print(
+            f"  [{i}/{len(files)}] Processing {file_path.name}... ", end="", flush=True
+        )
         try:
             result = processor.process_invoice(str(file_path))
             results.append(result)
@@ -330,14 +352,20 @@ def main():
         print(f"  Total Files: {total}")
         print(f"  Successful: {successful}")
         print(f"  Failed: {total - successful}")
-        print(f"  Success Rate: {successful / total:.1%}" if total > 0 else "  Success Rate: N/A")
+        print(
+            f"  Success Rate: {successful / total:.1%}"
+            if total > 0
+            else "  Success Rate: N/A"
+        )
 
         print("\n📈 Fields Found")
         print("-" * 80)
         for field in FIELD_NAMES:
             found = sum(
-                1 for r in results
-                if r.get("success") and r.get("fields", {}).get(field) not in [None, "Not Found", ""]
+                1
+                for r in results
+                if r.get("success")
+                and r.get("fields", {}).get(field) not in [None, "Not Found", ""]
             )
             pct = found / total if total > 0 else 0
             bar_length = 40

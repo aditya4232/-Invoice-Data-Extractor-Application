@@ -92,7 +92,13 @@ def render_field_card(label, value, icon="📋", confidence=None):
     """Render a field card with optional confidence indicator."""
     if value and value != "Not Found":
         if confidence is not None:
-            conf_color = "#22c55e" if confidence >= 80 else "#eab308" if confidence >= 60 else "#ef4444"
+            conf_color = (
+                "#22c55e"
+                if confidence >= 80
+                else "#eab308"
+                if confidence >= 60
+                else "#ef4444"
+            )
             st.success(
                 f"{icon} **{label}**: {value}  \n"
                 f"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;🎯 Confidence: "
@@ -113,30 +119,64 @@ def render_results(result, show_raw_text=False, show_confidence=True):
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        vendor_conf = confidence_details.get("vendor_name") if isinstance(confidence_details, dict) else None
+        vendor_conf = (
+            confidence_details.get("vendor_name")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("Vendor Name", fields.get("vendor_name"), "🏢", vendor_conf)
 
-        inv_conf = confidence_details.get("invoice_number") if isinstance(confidence_details, dict) else None
-        render_field_card("Invoice Number", fields.get("invoice_number"), "📄", inv_conf)
+        inv_conf = (
+            confidence_details.get("invoice_number")
+            if isinstance(confidence_details, dict)
+            else None
+        )
+        render_field_card(
+            "Invoice Number", fields.get("invoice_number"), "📄", inv_conf
+        )
 
-        date_conf = confidence_details.get("invoice_date") if isinstance(confidence_details, dict) else None
+        date_conf = (
+            confidence_details.get("invoice_date")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("Invoice Date", fields.get("invoice_date"), "📅", date_conf)
 
     with col2:
-        due_conf = confidence_details.get("due_date") if isinstance(confidence_details, dict) else None
+        due_conf = (
+            confidence_details.get("due_date")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("Due Date", fields.get("due_date"), "⏰", due_conf)
 
-        amt_conf = confidence_details.get("total_amount") if isinstance(confidence_details, dict) else None
+        amt_conf = (
+            confidence_details.get("total_amount")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("Total Amount", fields.get("total_amount"), "💰", amt_conf)
 
-        po_conf = confidence_details.get("po_number") if isinstance(confidence_details, dict) else None
+        po_conf = (
+            confidence_details.get("po_number")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("PO Number", fields.get("po_number"), "🔖", po_conf)
 
     with col3:
-        gstin_conf = confidence_details.get("gstin") if isinstance(confidence_details, dict) else None
+        gstin_conf = (
+            confidence_details.get("gstin")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("GSTIN", fields.get("gstin"), "🇮🇳", gstin_conf)
 
-        pan_conf = confidence_details.get("pan") if isinstance(confidence_details, dict) else None
+        pan_conf = (
+            confidence_details.get("pan")
+            if isinstance(confidence_details, dict)
+            else None
+        )
         render_field_card("PAN", fields.get("pan"), "🆔", pan_conf)
 
         all_amounts = fields.get("all_amounts", [])
@@ -173,7 +213,9 @@ def render_annotation_interface(result, processor):
     raw_text = result.get("raw_text", "")
 
     with st.expander("✏️ Annotate & Correct Fields", expanded=False):
-        st.markdown("Review and correct the extracted fields. Changes will be saved as training data.")
+        st.markdown(
+            "Review and correct the extracted fields. Changes will be saved as training data."
+        )
 
         corrected_fields = {}
 
@@ -218,11 +260,15 @@ def render_annotation_interface(result, processor):
 
         col_btn1, col_btn2 = st.columns([1, 4])
         with col_btn1:
-            if st.button("💾 Save as Training Data", type="primary", use_container_width=True):
+            if st.button(
+                "💾 Save as Training Data", type="primary", use_container_width=True
+            ):
                 if "annotations_saved" not in st.session_state:
                     st.session_state.annotations_saved = []
 
-                annotation_key = f"{file_name}_{len(st.session_state.annotations_saved)}"
+                annotation_key = (
+                    f"{file_name}_{len(st.session_state.annotations_saved)}"
+                )
 
                 processor.add_annotation(
                     file_name=file_name,
@@ -236,7 +282,9 @@ def render_annotation_interface(result, processor):
                 st.rerun()
 
         with col_btn2:
-            if "annotations_saved" in st.session_state and any(file_name in k for k in st.session_state.annotations_saved):
+            if "annotations_saved" in st.session_state and any(
+                file_name in k for k in st.session_state.annotations_saved
+            ):
                 st.success("✅ Already annotated for this file.")
 
 
@@ -247,7 +295,9 @@ def render_learning_dashboard(processor):
     dashboard_data = processor.get_learning_dashboard()
 
     if not dashboard_data:
-        st.info("No learning data available yet. Start annotating invoices to build training data.")
+        st.info(
+            "No learning data available yet. Start annotating invoices to build training data."
+        )
         return
 
     annotations = dashboard_data.get("annotations", {})
@@ -304,16 +354,22 @@ def render_learning_dashboard(processor):
             with col_f2:
                 st.caption(f"{correct}/{total_samples} correct")
     else:
-        st.info("No per-field data yet. Annotate more invoices to see accuracy metrics.")
+        st.info(
+            "No per-field data yet. Annotate more invoices to see accuracy metrics."
+        )
 
     st.markdown("---")
 
     st.subheader("🤖 Train on All Annotations")
 
     if total_annotations > 0:
-        st.markdown(f"Training will use all **{total_annotations}** annotated invoices to improve pattern recognition.")
+        st.markdown(
+            f"Training will use all **{total_annotations}** annotated invoices to improve pattern recognition."
+        )
 
-        if st.button("🚀 Train on All Annotations", type="primary", use_container_width=True):
+        if st.button(
+            "🚀 Train on All Annotations", type="primary", use_container_width=True
+        ):
             with st.spinner("Training on annotations... This may take a moment."):
                 try:
                     report = processor.train_on_annotations()
@@ -361,32 +417,42 @@ def process_single_file(processor, uploaded_file, preprocess=True):
 
 
 def render_single_mode(
-    processor, preprocess, show_raw_text, show_confidence, output_format, 
-    tesseract_available=True
+    processor,
+    preprocess,
+    show_raw_text,
+    show_confidence,
+    output_format,
+    tesseract_available=True,
 ):
     st.subheader("📁 Upload Single Invoice")
-    
+
     # If Tesseract is not available, show manual text input
     if not tesseract_available:
-        st.info("💡 **Manual Mode:** Paste OCR text below and extract fields using pattern matching.")
-        
+        st.info(
+            "💡 **Manual Mode:** Paste OCR text below and extract fields using pattern matching."
+        )
+
         manual_text = st.text_area(
             "Paste OCR Text Here:",
             height=200,
             help="Paste the text extracted from an invoice to extract structured fields",
         )
-        
-        if manual_text.strip() and st.button("🔍 Extract Fields from Text", type="primary", use_container_width=True):
+
+        if manual_text.strip() and st.button(
+            "🔍 Extract Fields from Text", type="primary", use_container_width=True
+        ):
             try:
                 from extractor import FieldExtractor
                 from utils import DataCleaner
-                
+
                 extractor = FieldExtractor()
                 cleaner = DataCleaner()
-                
+
                 fields = extractor.extract_all_fields(manual_text)
+                confidence_details = fields.pop("_confidence_details", None)
                 cleaned_fields = cleaner.clean_all(fields)
-                
+                cleaned_fields.pop("_confidence_details", None)
+
                 result = {
                     "file_path": "manual_input",
                     "file_name": "Manual Input",
@@ -397,20 +463,22 @@ def render_single_mode(
                     "success": True,
                     "error": None,
                 }
-                
-                if "_confidence_details" in fields:
-                    result["confidence_details"] = fields.pop("_confidence_details")
-                
+
+                if confidence_details:
+                    result["confidence_details"] = confidence_details
+
                 st.success("✅ Fields extracted from text!")
                 render_results(result, show_raw_text, show_confidence)
-                
+
             except Exception as e:
                 st.error(f"Error: {e}")
-        
+
         st.divider()
-        st.caption("💡 For automatic OCR extraction, install Tesseract and run locally or deploy with Docker/Railway.")
+        st.caption(
+            "💡 For automatic OCR extraction, install Tesseract and run locally or deploy with Docker/Railway."
+        )
         return
-    
+
     # Normal file upload mode when Tesseract is available
     uploaded_file = st.file_uploader(
         "Choose an invoice file",
@@ -483,14 +551,20 @@ def render_single_mode(
 
 
 def render_batch_mode(
-    processor, preprocess, show_raw_text, show_confidence, output_format,
-    tesseract_available=True
+    processor,
+    preprocess,
+    show_raw_text,
+    show_confidence,
+    output_format,
+    tesseract_available=True,
 ):
     if not tesseract_available:
         st.subheader("📁 Batch Processing")
-        st.info("⚠️ Batch processing requires Tesseract OCR. Use manual mode above or deploy with Docker/Railway for full functionality.")
+        st.info(
+            "⚠️ Batch processing requires Tesseract OCR. Use manual mode above or deploy with Docker/Railway for full functionality."
+        )
         return
-    
+
     st.subheader("📁 Batch Processing")
     st.info("Upload multiple invoice files to process them all at once.")
 
@@ -582,7 +656,9 @@ def main():
     st.title("🧾 Invoice Data Extractor")
     st.markdown("Extract key data from invoice documents using OCR & NLP")
 
-    preprocess, show_raw_text, show_confidence, enable_learning, output_format = render_sidebar()
+    preprocess, show_raw_text, show_confidence, enable_learning, output_format = (
+        render_sidebar()
+    )
 
     if not PROCESSOR_AVAILABLE:
         st.error(f"**Import Error**: {IMPORT_ERROR}")
@@ -592,10 +668,12 @@ def main():
         st.stop()
 
     processor, tesseract_available = init_processor()
-    
+
     # Show warning if Tesseract is not available
     if not tesseract_available:
-        st.warning("⚠️ **Tesseract OCR not available.** Automatic extraction is disabled.")
+        st.warning(
+            "⚠️ **Tesseract OCR not available.** Automatic extraction is disabled."
+        )
         st.info(
             "💡 **You can still:**\n"
             "• Use **Manual Text Input** to paste OCR text\n"
@@ -610,22 +688,32 @@ def main():
     if processor is None:
         st.stop()
 
-    tab_single, tab_batch, tab_learning = st.tabs([
-        "📄 Single Invoice",
-        "📁 Batch Processing",
-        "🎓 Learning",
-    ])
+    tab_single, tab_batch, tab_learning = st.tabs(
+        [
+            "📄 Single Invoice",
+            "📁 Batch Processing",
+            "🎓 Learning",
+        ]
+    )
 
     with tab_single:
         render_single_mode(
-            processor, preprocess, show_raw_text, show_confidence, output_format, 
-            tesseract_available=tesseract_available
+            processor,
+            preprocess,
+            show_raw_text,
+            show_confidence,
+            output_format,
+            tesseract_available=tesseract_available,
         )
 
     with tab_batch:
         render_batch_mode(
-            processor, preprocess, show_raw_text, show_confidence, output_format,
-            tesseract_available=tesseract_available
+            processor,
+            preprocess,
+            show_raw_text,
+            show_confidence,
+            output_format,
+            tesseract_available=tesseract_available,
         )
 
     with tab_learning:
