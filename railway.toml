@@ -4,9 +4,5 @@ builder = "dockerfile"
 
 [deploy]
 numReplicas = 1
-sleepApplication = true
-wakeCommand = "streamlit run app.py"
-healthCheckPath = "/"
-
-[processes]
-web = "streamlit run app.py --server.port $PORT --server.address 0.0.0.0"
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
