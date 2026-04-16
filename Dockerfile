@@ -28,6 +28,6 @@ COPY . .
 
 RUN mkdir -p /app/sample_invoices /app/output /app/models /app/annotations
 
-EXPOSE 10000
+EXPOSE 8501
 
-CMD ["streamlit", "run", "app.py", "--server.port=${PORT:-10000}", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app.py", "--server.port=${PORT:-8501}", "--server.address=0.0.0.0"]
